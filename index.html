@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Chromebook用 CheerpJローカル読み込み</title>
+    <!-- サーバー経由（localhost）にすることで、CORSエラーを起こさず外部CDNを読み込めます -->
+    <script src="https://leaningtech.com"></script>
+</head>
+<body>
+    <button id="btn" disabled>CheerpJ初期化中...</button>
+    <pre id="output">ここに結果が表示されます</pre>
+
+    <script>
+    // 正しい初期化関数。完了したらボタンを有効化します
+    cheerpjInit().then(() => {
+        const btn = document.getElementById('btn');
+        btn.textContent = "ローカルファイルを選択してJavaに渡す";
+        btn.disabled = false;
+    }).catch(err => {
+        document.getElementById('output').textContent = "初期化エラー: " + err;
+    });
+
+    document.getElementById('btn').addEventListener('click', async () => {
+        try {
+            // ユーザーにローカルファイル（テキスト、JARなど）を選択させる
+            const [fileHandle] = await window.showOpenFilePicker();
+            const file = await fileHandle.getFile();
+            const content = await file.text();
+            
+            // CheerpJ 3.0 の仮想ファイルシステム（/files/）へ配置
+            const blob = new Blob([content], { type: 'text/plain' });
+            await cheerpjUploadFile("/files/local_data.txt", blob);
+            
+            document.getElementById('output').textContent = "ファイルをJava用仮想パス（/files/local_data.txt）に配置しました。\n\n【ファイル中身】\n" + content;
+
+        } catch (err) {
+            console.error('キャンセル、またはエラー:', err);
+            document.getElementById('output').textContent = "エラー: " + err.message;
+        }
+    });
+    </script>
+</body>
+</html>
