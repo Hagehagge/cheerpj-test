@@ -4,23 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chromebook用 CheerpJローカル読み込み</title>
-    <!-- 1. 最新の安全なCDN（バージョン4.x系）から読み込みます -->
-    <script src="https://cjrtnc.leaningtech.com/4.3/loader.js"></script>
+    <!-- 外部URLではなく、同じリポジトリ内の loader.js を直接読み込んでCORSを100%回避 -->
+    <script src="./loader.js"></script>
 </head>
 <body>
     <button id="btn" disabled>CheerpJ初期化中...</button>
     <pre id="output">ここに結果が表示されます</pre>
 
     <script>
-    // 2. ページ読み込み完了後にCheerpJを初期化
+    // ページ読み込み完了後にCheerpJを初期化
     window.addEventListener('DOMContentLoaded', async () => {
         try {
-            // CheerpJが正しく読み込まれているかチェック
+            // loader.jsが読み込めているかチェック
             if (typeof cheerpjInit === 'undefined') {
-                throw new Error("CheerpJのスクリプト読み込みがブラウザにブロックされました。");
+                throw new Error("loader.jsの読み込みに失敗しています。ファイルが同じ場所にアップロードされているか確認してください。");
             }
             
-            // 初期化を実行（戻り値のPromiseを待機）
+            // 初期化を実行（CheerpJ 3.0/4.x共通の正しい構文です）
             await cheerpjInit();
             
             const btn = document.getElementById('btn');
@@ -32,16 +32,15 @@
         }
     });
 
-    // 3. ボタンクリック時の処理
+    // ボタンクリック時の処理
     document.getElementById('btn').addEventListener('click', async () => {
         try {
-            // File System Access APIでローカルファイルを選択
+            // File System Access APIでChromebookのローカルファイルを選択
             const [fileHandle] = await window.showOpenFilePicker();
             const file = await fileHandle.getFile();
             const content = await file.text();
             
-            // 仮想ファイルシステムにテキストを書き込み
-            // CheerpJ 3.0以降の最新の書き込み関数を使用します
+            // CheerpJの最新仮想ファイルシステムへ配置
             await cheerpOSAddStringFile("/files/local_data.txt", content);
             
             document.getElementById('output').textContent = "ファイルをJava用仮想パス（/files/local_data.txt）に配置しました。\n\n【ファイル中身】\n" + content;
