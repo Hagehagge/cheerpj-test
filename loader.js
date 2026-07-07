@@ -35,8 +35,18 @@ function cj3GetCurrentScript()
 		loaderStart = part.indexOf("https://");
 	if(loaderStart == -1)
 		loaderStart = part.indexOf("chrome-extension://");
+	// 【修正点】ローカルファイルプロトコル (file://) を判定に追加
+	if(loaderStart == -1)
+		loaderStart = part.indexOf("file://");
+		
 	var loaderEnd = part.indexOf(".js");
-	if(!(loaderStart >= 0 && loaderEnd > 0)) debugger;
+	
+	// 【修正点】未知のプロトコルの場合にクラッシュ(debugger)させず、安全にフォールバックさせる
+	if(!(loaderStart >= 0 && loaderEnd > 0)) {
+		console.warn("CheerpJ: Unknown protocol in loader path:", part);
+		loaderStart = 0; 
+	}
+	
 	return part.substring(loaderStart, loaderEnd+3);
 }
 
@@ -74,6 +84,8 @@ function cj3LoadImpl(options)
 		});
 	});
 }
+
+// ... （以降のコードは元と同じため省略せずにそのまま維持してください） ...
 
 function cj3StartApplets()
 {
