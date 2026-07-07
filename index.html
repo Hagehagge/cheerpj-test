@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chromebook用 CheerpJローカル読み込み</title>
-    <!-- 外部URLではなく、同じリポジトリ内の loader.js を直接読み込んでCORSを100%回避 -->
     <script src="./loader.js"></script>
 </head>
 <body>
@@ -20,11 +19,11 @@
                 throw new Error("loader.jsの読み込みに失敗しています。ファイルが同じ場所にアップロードされているか確認してください。");
             }
             
-            // 初期化を実行（CheerpJ 3.0/4.x共通の正しい構文です）
+            // 初期化を実行
             await cheerpjInit();
             
             const btn = document.getElementById('btn');
-            btn.textContent = "ローカルファイルを選択してJavaに渡す";
+            btn.textContent = "ローカルファイルを選択して内容を取得";
             btn.disabled = false;
         } catch (err) {
             document.getElementById('output').textContent = "初期化エラー: " + err.message;
@@ -40,10 +39,16 @@
             const file = await fileHandle.getFile();
             const content = await file.text();
             
-            // CheerpJの最新仮想ファイルシステムへ配置
-            await cheerpOSAddStringFile("/files/local_data.txt", content);
+            // 【修正点】
+            // CheerpJ 3.x/4.x では cheerpOSAddStringFile は廃止されています。
+            // 以下のコードはReferenceErrorを引き起こすためコメントアウトしています。
+            // await cheerpOSAddStringFile("/files/local_data.txt", content);
             
-            document.getElementById('output').textContent = "ファイルをJava用仮想パス（/files/local_data.txt）に配置しました。\n\n【ファイル中身】\n" + content;
+            // Java側でこのデータを読み込むための正しいアプローチ（CheerpJ 3）：
+            // 1. cheerpjRunLibrary を使ってJava側のメソッド(例: processData(String))を呼び出し、contentを引数として渡す
+            // 2. JSの File オブジェクト(上記変数 'file')を直接Javaの InputStream などを介して読み込ませる
+            
+            document.getElementById('output').textContent = "ファイルの読み込みに成功しました。\n(※CheerpJ 3では cheerpOSAddStringFile は使えません。Javaメソッドへの直接受け渡しが必要です。)\n\n【ファイル中身】\n" + content;
 
         } catch (err) {
             console.error('エラー:', err);
